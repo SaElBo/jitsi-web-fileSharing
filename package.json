@@ -175,6 +175,7 @@
     "postinstall": "patch-package && jetify",
     "validate": "npm ls",
     "start": "make dev",
+    "build": "make",
     "ios": "react-native run-ios",
     "android": "react-native run-android"
   }

@@ -53,7 +53,7 @@ type State = {
     /**
      * User provided nickname when the input text is provided in the view.
      */
-    message: string,
+    message: string | {file :string , fileName : string} ,
 
     /**
      * Whether or not the smiley selector is visible.
@@ -97,6 +97,7 @@ class ChatInput extends Component<Props, State> {
         this._setTextAreaRef = this._setTextAreaRef.bind(this);
         this._onFileSend = this._onFileSend.bind(this);
         this._getDataUrl = this._getDataUrl.bind(this);
+        this._isFile = this._isFile.bind(this);
     }
 
     /**
@@ -122,7 +123,7 @@ class ChatInput extends Component<Props, State> {
             ? 'show-smileys' : 'hide-smileys'} smileys-panel`;
 
         return (
-            <div className = { `chat-input-container${this.state.message.trim().length ? ' populated' : ''}` }>
+            <div className = { `chat-input-container${this.state.message  !== ' ' ? ' populated' : ''}` }>
                 <div id = 'chat-input' >
                     { this.props._areSmileysDisabled ? null : (
                         <div className = 'smiley-input'>
@@ -150,6 +151,15 @@ class ChatInput extends Component<Props, State> {
                         </div>
                     ) }
                     <div className = 'usrmsg-form'>
+                        {typeof this.state.message === 'object' ? 
+                            <TextareaAutosize
+                            autoComplete = 'off'
+                            autoFocus = { true }
+                            id = 'userfile'
+                            placeholder = { this.state.message.fileName }
+                            disabled
+                            tabIndex = { 0 }
+                             /> :
                         <TextareaAutosize
                             autoComplete = 'off'
                             autoFocus = { true }
@@ -162,7 +172,7 @@ class ChatInput extends Component<Props, State> {
                             ref = { this._setTextAreaRef }
                             tabIndex = { 0 }
                             value = { this.state.message } />
-                            
+                        }
                     </div>
                     <div className = "send-button-container">
                         <div
@@ -173,6 +183,7 @@ class ChatInput extends Component<Props, State> {
                             name="file"  
                             id="file"
                             onChange = { this._onFileSend }
+                            className = 'hidden'
                             />
                             <label 
                             htmlFor="file"> 
@@ -187,7 +198,7 @@ class ChatInput extends Component<Props, State> {
                             onClick = { this._onSubmitMessage }
                             onKeyPress = { this._onSubmitMessageKeyPress }
                             role = 'button'
-                            tabIndex = { this.state.message.trim() ? 0 : -1 } >
+                            tabIndex = { this.state.message !== ' ' ? 0 : -1 } >
                             <Icon src = { IconPlane } />
                             
                         </div>
@@ -197,6 +208,14 @@ class ChatInput extends Component<Props, State> {
         );
     }
 
+    _isFile(message)
+    {
+        console.log(message)
+        if(typeof message === 'object') return true;
+        return false;
+        // const base64Regex = new RegExp(/^data:.*;base64,.*/);
+        // return base64Regex.test(string)
+    }
     /**
      * Place cursor focus on this component's text area.
      *
@@ -216,35 +235,34 @@ class ChatInput extends Component<Props, State> {
      * @returns {void}
      */
     _onSubmitMessage() {
-        const trimmed = this.state.message.trim();
+        console.log(this.state.message)
+        if(typeof this.state.message === 'object')
+        {
+            const message = this.state.message.file + '@' + this.state.message.fileName
+            this.props.onSend(message);
 
-        if (trimmed) {
-            this.props.onSend(trimmed);
+            
+        } else {
+            const trimmed = this.state.message.trim();
 
-            this.setState({ message: '' });
-
-            // Keep the textarea in focus when sending messages via submit button.
-            this._focus();
+             if (trimmed) {
+                 this.props.onSend(trimmed);
+                }
         }
+        this.setState({ message: '' });
+
+        // Keep the textarea in focus when sending messages via submit button.
+        this._focus();
+        
 
     }
     _onFileSend(event){
         
-        console.log(event.target.files)
         const file = event.target.files[0];
         this._getDataUrl(file).then(base64File => 
-            this.setState({ message: base64File })
+            this.setState({ message: {file :  base64File , fileName : file.name  }})
         )
-        
-        
-        // this.state.message = base64File
-        // this._getDataUrl(file).then(base64 => console.log(base64));
-        
-        // const file = this.state.file;
-        // if(file){
-        //     this.props.onSend(file);
-
-        // }
+   
     }
     _getDataUrl(file){
         return new Promise((resolve,reject)=>{

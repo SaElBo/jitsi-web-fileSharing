@@ -51,15 +51,24 @@ class ChatMessage extends AbstractChatMessage<Props> {
 
             content.push(' ');
         }
-
+        
         content.forEach(i => {
             if (typeof i === 'string' && i !== ' ' && !base64Regex.test(i) ) {
                 processedMessage.push(<Linkify key = { i }>{ i }</Linkify>);
             } else {
-                processedMessage.push(i);
+                if(base64Regex.test(i)) 
+                {
+                    const file = {
+                        file : i.split('@')[0],
+                        fileName : i.split('@')[1]
+                    }
+                    processedMessage.push(file)
+                } else {
+
+                    processedMessage.push(i);
+                }
             }
         });
-        
 
         return (
             <div
@@ -77,8 +86,8 @@ class ChatMessage extends AbstractChatMessage<Props> {
                                         { user: this.props.message.displayName }) }
                                 </span>
                                 { isFile ? 
-                                
-                                <a href={this._toBlob(processedMessage)}>file</a>
+                                // {processedMessage}
+                                <a href={this._toBlob(processedMessage[0].file)} target="_blank" download>{processedMessage[0].fileName}</a>
                                 
                                 
                                 
@@ -102,8 +111,8 @@ class ChatMessage extends AbstractChatMessage<Props> {
         );
     }
      _toBlob (base64String){
-        const type = base64String[0].split(';')[0].split(':')[1];
-        const b64 =  base64String[0].split(',')[1]
+        const type = base64String.split(';')[0].split(':')[1];
+        const b64 =  base64String.split(',')[1]
         const byteCharacters = atob(b64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {

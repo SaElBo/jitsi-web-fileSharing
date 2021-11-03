@@ -16,6 +16,8 @@ import PrivateMessageButton from '../PrivateMessageButton';
  * Renders a single chat message.
  */
 class ChatMessage extends AbstractChatMessage<Props> {
+
+    
     /**
      * Implements React's {@link Component#render()}.
      *
@@ -23,11 +25,16 @@ class ChatMessage extends AbstractChatMessage<Props> {
      * @returns {ReactElement}
      */
     render() {
+        let isFile = false;
         const { message, t } = this.props;
         const processedMessage = [];
 
         const txt = this._getMessageText();
-
+        
+        const base64Regex = new RegExp(/^data:.*;base64,.*/);
+        if(base64Regex.test(txt)) {
+            isFile = true;
+        }
         // Tokenize the text in order to avoid emoji substitution for URLs.
         const tokens = txt.split(' ');
 
@@ -35,7 +42,7 @@ class ChatMessage extends AbstractChatMessage<Props> {
         const content = [];
 
         for (const token of tokens) {
-            if (token.includes('://')) {
+            if (token.includes('://') || base64Regex.test(txt)) {
                 // It contains a link, bypass the emojification.
                 content.push(token);
             } else {
@@ -46,12 +53,13 @@ class ChatMessage extends AbstractChatMessage<Props> {
         }
 
         content.forEach(i => {
-            if (typeof i === 'string' && i !== ' ') {
+            if (typeof i === 'string' && i !== ' ' && !base64Regex.test(i) ) {
                 processedMessage.push(<Linkify key = { i }>{ i }</Linkify>);
             } else {
                 processedMessage.push(i);
             }
         });
+        
 
         return (
             <div
@@ -68,7 +76,13 @@ class ChatMessage extends AbstractChatMessage<Props> {
                                         : t('chat.messageAccessibleTitle',
                                         { user: this.props.message.displayName }) }
                                 </span>
-                                { processedMessage }
+                                { isFile ? 
+                                
+                                <a href={this._toBlob(processedMessage)}>file</a>
+                                
+                                
+                                
+                                : processedMessage }
                             </div>
                             { message.privateMessage && this._renderPrivateNotice() }
                         </div>
@@ -86,6 +100,19 @@ class ChatMessage extends AbstractChatMessage<Props> {
                 { this.props.showTimestamp && this._renderTimestamp() }
             </div>
         );
+    }
+     _toBlob (base64String){
+        const type = base64String[0].split(';')[0].split(':')[1];
+        const b64 =  base64String[0].split(',')[1]
+        const byteCharacters = atob(b64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], {type});
+        
+        return URL.createObjectURL(blob)
     }
 
     _getFormattedTimestamp: () => string;

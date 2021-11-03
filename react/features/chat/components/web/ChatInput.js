@@ -6,7 +6,7 @@ import type { Dispatch } from 'redux';
 
 import { isMobileBrowser } from '../../../base/environment/utils';
 import { translate } from '../../../base/i18n';
-import { Icon, IconPlane, IconSmile } from '../../../base/icons';
+import { Icon, IconPlane, IconSmile ,IconShare} from '../../../base/icons';
 import { connect } from '../../../base/redux';
 import { areSmileysDisabled } from '../../functions';
 
@@ -95,6 +95,8 @@ class ChatInput extends Component<Props, State> {
         this._onToggleSmileysPanelKeyPress = this._onToggleSmileysPanelKeyPress.bind(this);
         this._onSubmitMessageKeyPress = this._onSubmitMessageKeyPress.bind(this);
         this._setTextAreaRef = this._setTextAreaRef.bind(this);
+        this._onFileSend = this._onFileSend.bind(this);
+        this._getDataUrl = this._getDataUrl.bind(this);
     }
 
     /**
@@ -160,6 +162,23 @@ class ChatInput extends Component<Props, State> {
                             ref = { this._setTextAreaRef }
                             tabIndex = { 0 }
                             value = { this.state.message } />
+                            
+                    </div>
+                    <div className = "send-button-container">
+                        <div
+                         
+                        >
+                            <input 
+                            type="file"  
+                            name="file"  
+                            id="file"
+                            onChange = { this._onFileSend }
+                            />
+                            <label 
+                            htmlFor="file"> 
+                            <Icon src = { IconShare } />
+                            </label>
+                        </div>
                     </div>
                     <div className = 'send-button-container'>
                         <div
@@ -170,6 +189,7 @@ class ChatInput extends Component<Props, State> {
                             role = 'button'
                             tabIndex = { this.state.message.trim() ? 0 : -1 } >
                             <Icon src = { IconPlane } />
+                            
                         </div>
                     </div>
                 </div>
@@ -207,6 +227,33 @@ class ChatInput extends Component<Props, State> {
             this._focus();
         }
 
+    }
+    _onFileSend(event){
+        
+        console.log(event.target.files)
+        const file = event.target.files[0];
+        this._getDataUrl(file).then(base64File => 
+            this.setState({ message: base64File })
+        )
+        
+        
+        // this.state.message = base64File
+        // this._getDataUrl(file).then(base64 => console.log(base64));
+        
+        // const file = this.state.file;
+        // if(file){
+        //     this.props.onSend(file);
+
+        // }
+    }
+    _getDataUrl(file){
+        return new Promise((resolve,reject)=>{
+            let reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+
+        })
     }
     _onDetectSubmit: (Object) => void;
 

@@ -114,6 +114,7 @@ class ChatMessage extends AbstractChatMessage<Props> {
         const type = base64String.split(';')[0].split(':')[1];
         const b64 =  base64String.split(',')[1]
         const byteCharacters = atob(b64);
+        
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);

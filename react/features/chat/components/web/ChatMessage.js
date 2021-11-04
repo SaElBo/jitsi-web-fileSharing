@@ -56,7 +56,16 @@ class ChatMessage extends AbstractChatMessage<Props> {
             if (typeof i === 'string' && i !== ' ' && !base64Regex.test(i) ) {
                 processedMessage.push(<Linkify key = { i }>{ i }</Linkify>);
             } else {
-                processedMessage.push(i);
+                if(!base64Regex.test(i)) {
+                    const file = {
+                        file: i.split('@')[0],
+                        fileName : i.split('@')[1]
+                    }
+                    processedMessage.push(file);
+                } else {
+                    processedMessage.push(i);
+
+                }
             }
         });
         
@@ -78,7 +87,7 @@ class ChatMessage extends AbstractChatMessage<Props> {
                                 </span>
                                 { isFile ? 
                                 
-                                <a href={this._toBlob(processedMessage)}>file</a>
+                                <a href={this._toBlob(processedMessage.file)} download target="_blank" >{processedMessage.fileName}</a>
                                 
                                 
                                 

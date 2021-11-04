@@ -53,7 +53,7 @@ type State = {
     /**
      * User provided nickname when the input text is provided in the view.
      */
-    message: string,
+    message: string | {file : string , fileName : string},
 
     /**
      * Whether or not the smiley selector is visible.
@@ -216,6 +216,10 @@ class ChatInput extends Component<Props, State> {
      * @returns {void}
      */
     _onSubmitMessage() {
+        if(typeof this.state.message === 'object') {
+            const message = this.state.message.file + '@' + this.state.message.fileName
+            this.setState({message: message })
+        }
         const trimmed = this.state.message.trim();
 
         if (trimmed) {
@@ -233,7 +237,7 @@ class ChatInput extends Component<Props, State> {
         console.log(event.target.files)
         const file = event.target.files[0];
         this._getDataUrl(file).then(base64File => 
-            this.setState({ message: base64File })
+            this.setState({ message: {file : base64File , fileName = file.name }})
         )
         
         

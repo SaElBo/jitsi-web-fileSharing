@@ -120,9 +120,11 @@ class ChatInput extends Component<Props, State> {
     render() {
         const smileysPanelClassName = `${this.state.showSmileysPanel
             ? 'show-smileys' : 'hide-smileys'} smileys-panel`;
-
+           
+        
+        const isFile = typeof this.state.message === 'object';
         return (
-            <div className = { `chat-input-container${this.state.message.trim().length ? ' populated' : ''}` }>
+            <div className = { `chat-input-container${this.state.message ? ' populated' : ''}` }>
                 <div id = 'chat-input' >
                     { this.props._areSmileysDisabled ? null : (
                         <div className = 'smiley-input'>
@@ -150,7 +152,19 @@ class ChatInput extends Component<Props, State> {
                         </div>
                     ) }
                     <div className = 'usrmsg-form'>
-                        <TextareaAutosize
+                        {
+                            isFile ? 
+                            <TextareaAutosize
+                            autoComplete = 'off'
+                            autoFocus = { true }
+                            id = 'userfile'
+                            maxRows = { 5 }
+                            placeholder = { this.state.message.fileName }
+                            disabled
+                            tabIndex = { 0 }
+                            value = { this.state.message.fileName } />
+                            :
+                            <TextareaAutosize
                             autoComplete = 'off'
                             autoFocus = { true }
                             id = 'usermsg'
@@ -162,6 +176,8 @@ class ChatInput extends Component<Props, State> {
                             ref = { this._setTextAreaRef }
                             tabIndex = { 0 }
                             value = { this.state.message } />
+                        }
+                        
                             
                     </div>
                     <div className = "send-button-container">
@@ -173,6 +189,7 @@ class ChatInput extends Component<Props, State> {
                             name="file"  
                             id="file"
                             onChange = { this._onFileSend }
+                            className="hidden"
                             />
                             <label 
                             htmlFor="file"> 
@@ -187,7 +204,7 @@ class ChatInput extends Component<Props, State> {
                             onClick = { this._onSubmitMessage }
                             onKeyPress = { this._onSubmitMessageKeyPress }
                             role = 'button'
-                            tabIndex = { this.state.message.trim() ? 0 : -1 } >
+                            tabIndex = { this.state.message? 0 : -1 } >
                             <Icon src = { IconPlane } />
                             
                         </div>
@@ -218,9 +235,11 @@ class ChatInput extends Component<Props, State> {
     _onSubmitMessage() {
         if(typeof this.state.message === 'object') {
             const message = this.state.message.file + '@' + this.state.message.fileName
+            this.props.onSend(trimmed)
             this.setState({message: message })
-        }
-        const trimmed = this.state.message.trim();
+            this._focus();
+        } else {
+            const trimmed = this.state.message.trim();
 
         if (trimmed) {
             this.props.onSend(trimmed);
@@ -230,6 +249,8 @@ class ChatInput extends Component<Props, State> {
             // Keep the textarea in focus when sending messages via submit button.
             this._focus();
         }
+        }
+        
 
     }
     _onFileSend(event){
